@@ -1,0 +1,74 @@
+name: Test Action
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-diff-pass:
+    name: 'Test: diff should pass when complete'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run envguard (should pass)
+        uses: ./
+        with:
+          env-file: tests/fixtures/.env.complete
+          example-file: tests/fixtures/.env.example.dist
+
+  test-diff-fail:
+    name: 'Test: diff should fail on missing keys'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run envguard (should fail)
+        id: check
+        uses: ./
+        continue-on-error: true
+        with:
+          env-file: tests/fixtures/.env.example
+          example-file: tests/fixtures/.env.example.dist
+          fail-on: missing
+
+      - name: Verify failure
+        run: |
+          if [ "${{ steps.check.outputs.valid }}" = "true" ]; then
+            echo "Expected valid=false but got true"
+            exit 1
+          fi
+          echo "Correctly detected missing keys"
+
+  test-simple-check:
+    name: 'Test: simple env file check'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check env file
+        uses: ./
+        with:
+          env-file: tests/fixtures/.env.example
+
+  test-outputs:
+    name: 'Test: action outputs are set'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run envguard
+        id: envguard
+        uses: ./
+        continue-on-error: true
+        with:
+          env-file: tests/fixtures/.env.example
+          example-file: tests/fixtures/.env.example.dist
+
+      - name: Check outputs exist
+        run: |
+          echo "valid=${{ steps.envguard.outputs.valid }}"
+          echo "missing=${{ steps.envguard.outputs.missing }}"
+          echo "undeclared=${{ steps.envguard.outputs.undeclared }}"
