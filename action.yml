@@ -1,0 +1,51 @@
+name: 'EnvGuard'
+description: 'Validate environment variables against schema in CI'
+author: 'stacklance'
+branding:
+  icon: 'shield'
+  color: 'green'
+
+inputs:
+  env-file:
+    description: 'Path to .env file to validate'
+    default: '.env.example'
+  schema:
+    description: 'Path to env.schema.ts for audit'
+    required: false
+  example-file:
+    description: 'Path to .env.example for diff comparison'
+    required: false
+  format:
+    description: 'Output format: github, json, or pretty'
+    default: 'github'
+  fail-on:
+    description: 'Comma-separated conditions to fail on: undeclared, missing, unused, unsafe'
+    default: 'undeclared,missing'
+  working-directory:
+    description: 'Working directory (for monorepos)'
+    default: '.'
+  src-dir:
+    description: 'Source directory for audit scan'
+    default: './src'
+
+outputs:
+  valid:
+    description: 'Whether all validations passed (true/false)'
+  undeclared:
+    description: 'JSON array of undeclared env var keys'
+  missing:
+    description: 'JSON array of missing env var keys'
+  unused:
+    description: 'JSON array of unused schema keys'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    INPUT_ENV_FILE: ${{ inputs.env-file }}
+    INPUT_SCHEMA: ${{ inputs.schema }}
+    INPUT_EXAMPLE_FILE: ${{ inputs.example-file }}
+    INPUT_FORMAT: ${{ inputs.format }}
+    INPUT_FAIL_ON: ${{ inputs.fail-on }}
+    INPUT_WORKING_DIRECTORY: ${{ inputs.working-directory }}
+    INPUT_SRC_DIR: ${{ inputs.src-dir }}
